@@ -18,8 +18,8 @@ public class JWTTokenProvider {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    private SecretKey getSecreKey(){
-        return new SecretKeySpec(secretKey.getBytes(), SignatureAlgorithm.HS512.getJcaName());
+    private SecretKey getSecretKey(){
+        return Jwts.SIG.HS256.key().build();
     }
 
     public String generateToken(Authentication authentication) {
@@ -27,14 +27,31 @@ public class JWTTokenProvider {
         UserDetails userPrincipal = (UserDetails) authentication.getPrincipal();
 
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername()))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .subject((userPrincipal.getUsername()))
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSecretKey())
                 .compact();
     }
 
     public String getUsernameFromToken(String token) {
-        return Jwts.parser().sets
+        return Jwts.parser()
+                .decryptWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
+    }
+
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser()
+                    .decryptWith(getSecretKey())
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException e) {
+            return false;
+        }
     }
 }
