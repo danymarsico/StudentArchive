@@ -16,6 +16,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    @Autowired
+    private SecurePasswordEncoder passwordEncoder;
+
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
@@ -27,8 +30,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             throw new UsernameNotFoundException("This user does not exist");
         }
 
-        if(!rawPassword.equals("exactPassword")){
-            throw new AuthenticationException("Incorrect password") {}
+        if(!passwordEncoder.matches(rawPassword, userDetails.getPassword())){
+            throw new AuthenticationException("Incorrect password") {};
         }
 
         return new UsernamePasswordAuthenticationToken(username, rawPassword, userDetails.getAuthorities());
