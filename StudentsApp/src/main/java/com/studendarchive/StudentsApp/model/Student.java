@@ -1,4 +1,4 @@
-package com.studendarchive.StudentsApp.Model;
+package com.studendarchive.StudentsApp.model;
 
 public class Student {
 
